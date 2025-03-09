@@ -1,25 +1,41 @@
 use colored::Colorize;
 use std::io;
 
-struct Item<'a> {
+struct Item {
     item_name: String,
-    possible_locales: &'a Vec<String>,
     locale_index: usize,
 }
 
-impl<'a> Item<'a> {
-    fn find_index_locale(&mut self, locale_to_find: String) {
-        for (index, locale) in self.possible_locales.iter().enumerate() {
-            if locale_to_find.eq(locale) {
-                self.locale_index = index;
-            }
-        }
+impl Item {
+    fn add(item_name: String, add_to: &mut Collection) {
+        let possible_locales = &add_to.items;
+
+        add_to.items.push(Item {
+            item_name,
+            locale_index: possible_locales.len(),
+        });
     }
 }
 
-struct Collection<'a> {
+struct Collection {
     coll_name: String,
-    items: Vec<Item<'a>>,
+    kind_of_location: String,
+    locales: Vec<String>,
+    items: Vec<Item>,
+}
+
+impl Collection {
+    fn new(coll_name: &str, kind_of_location: &str, locales: Vec<String>) -> Collection {
+        let coll_name = String::from(coll_name);
+        let kind_of_location = String::from(kind_of_location);
+
+        Collection {
+            coll_name,
+            kind_of_location,
+            locales,
+            items: Vec::new(),
+        }
+    }
 }
 
 fn main() {
@@ -28,39 +44,62 @@ fn main() {
     let mut user_collections: Vec<Collection> = Vec::new();
 
     //TESTS BELOW
-    user_locales.push(String::from("Quarto"));
-    user_locales.push(String::from("Sala"));
-    user_locales.push(String::from("Cozinha"));
+    user_locales.push(String::from("First"));
+    user_locales.push(String::from("Second"));
+    user_locales.push(String::from("Last"));
 
     let item_one = Item {
         item_name: String::from("Nirvana"),
-        possible_locales: &user_locales,
         locale_index: 0,
     };
 
     let item_two = Item {
         item_name: String::from("Metallica"),
-        possible_locales: &user_locales,
         locale_index: 0,
     };
 
     let item_three = Item {
         item_name: String::from("AC/DC"),
-        possible_locales: &user_locales,
         locale_index: 0,
     };
 
-    let my_collection = Collection {
-        coll_name: String::from("discos"),
-        items: vec![item_one, item_two, item_three],
-    };
+    let my_collection: Collection = Collection::new("Disks", "Shelves", user_locales);
 
     user_collections.push(my_collection);
+
+    user_collections[0].items.push(item_one);
+    user_collections[0].items.push(item_two);
+    user_collections[0].items.push(item_three);
 
     println!("This is my {} collection: ", user_collections[0].coll_name);
 
     for (index, item) in user_collections[0].items.iter().enumerate() {
         println!("{}: {}", index + 1, item.item_name);
     }
+
+    println!("{}", input_usize("Not that one!"));
     //TESTS ENDING
+}
+
+pub fn input_usize(error_message: &str) -> usize {
+    let mut read: String = String::new();
+    let mut read_success: bool = false;
+
+    let read = loop {
+        read.clear();
+
+        while !read_success {
+            read_success = io::stdin().read_line(&mut read).is_ok();
+        }
+
+        match read.trim().parse::<usize>() {
+            Ok(number) => break number,
+            Err(_) => {
+                read_success = false;
+                println!("{}", error_message);
+            }
+        }
+    };
+
+    read
 }
