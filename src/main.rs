@@ -1,4 +1,5 @@
 use colored::Colorize;
+use std::cmp::Ordering;
 use std::io;
 
 struct Item {
@@ -7,12 +8,42 @@ struct Item {
 }
 
 impl Item {
-    fn add(item_name: String, add_to: &mut Collection) {
-        let possible_locales = &add_to.items;
+    fn add_to_collection(item_name: Option<String>, coll_target: &mut Collection) {
+        let possible_locales = &coll_target.locales;
+        let item_name = match item_name {
+            Some(name) => name,
+            None => loop {
+                let mut buffer: String = String::new();
 
-        add_to.items.push(Item {
+                println!("Enter item name: ");
+
+                match io::stdin().read_line(&mut buffer) {
+                    Ok(_) => break String::from(buffer.trim()),
+                    Err(_) => (),
+                }
+            },
+        };
+
+        let locale_index = {
+            println!("Choose the item locale: (Use the index)");
+
+            for (index, locale) in possible_locales.iter().enumerate() {
+                println!("{}: {}", index, locale);
+            }
+
+            loop {
+                let index = input_usize("Sorry, input an index from the list");
+
+                match index.cmp(&possible_locales.len()) {
+                    Ordering::Less => break index,
+                    _ => println!("Sorry, input an index from the list"),
+                }
+            }
+        };
+
+        coll_target.items.push(Item {
             item_name,
-            locale_index: possible_locales.len(),
+            locale_index,
         });
     }
 }
@@ -63,7 +94,9 @@ fn main() {
         locale_index: 0,
     };
 
-    let my_collection: Collection = Collection::new("Disks", "Shelves", user_locales);
+    let mut my_collection: Collection = Collection::new("Disks", "Shelves", user_locales);
+
+    Item::add_to_collection(None, &mut my_collection);
 
     user_collections.push(my_collection);
 
@@ -74,10 +107,8 @@ fn main() {
     println!("This is my {} collection: ", user_collections[0].coll_name);
 
     for (index, item) in user_collections[0].items.iter().enumerate() {
-        println!("{}: {}", index + 1, item.item_name);
+        println!("{}: {}", index, item.item_name);
     }
-
-    println!("{}", input_usize("Not that one!"));
     //TESTS ENDING
 }
 
